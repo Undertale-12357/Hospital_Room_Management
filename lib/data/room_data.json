@@ -1,0 +1,1 @@
+[{"id":"R001","number":"001","beds":[{"id":"B1","is_occupied":true,"patient":{"id":"P001","name":"sans","illness":"cold"}},{"id":"B2","is_occupied":false,"patient":null},{"id":"B3","is_occupied":false,"patient":null},{"id":"B4","is_occupied":false,"patient":null}]}]

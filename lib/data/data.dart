@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import '../domain/manage_room.dart';
+import '../domain/room.dart';
 
 class Data {
   final String filePath;

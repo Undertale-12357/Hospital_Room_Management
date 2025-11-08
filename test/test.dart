@@ -1,4 +1,7 @@
 import 'package:test/test.dart';
+import 'package:hospital_room_management_system/domain/bed.dart';
+import 'package:hospital_room_management_system/domain/patient.dart';
+import 'package:hospital_room_management_system/domain/room.dart';
 import 'package:hospital_room_management_system/domain/manage_room.dart';
 import 'package:hospital_room_management_system/data/data.dart';
 
@@ -36,28 +39,28 @@ void main() {
     });
 
     test('should not allocate patient if no rooms exist', () {
-      final patient = Patient('P001', 'Alice', 'Flu');
+      final patient = Patient('P001', 'Sans', 'Flu');
       expect(() => hospital.allocate_patient(patient), throwsA(isA<Exception>()));
     });
 
     test('should allocate a patient to a bed', () {
       final room = Room('R101', '101', [Bed('B001')]);
       hospital.add_room(room);
-      final patient = Patient('P001', 'Alice', 'Flu');
+      final patient = Patient('P001', 'Sans', 'Flu');
 
       hospital.allocate_patient(patient);
 
       expect(hospital.rooms.first.beds.first.is_occupied, true);
-      expect(hospital.rooms.first.beds.first.patient?.name, 'Alice');
+      expect(hospital.rooms.first.beds.first.patient?.name, 'Sans');
     });
 
     test('should not allocate patient if all beds are occupied', () {
       final room = Room('R101', '101', [
-        Bed('B001', is_occupied: true, patient: Patient('P001', 'Alice', 'Cold')),
+        Bed('B001', is_occupied: true, patient: Patient('P001', 'Mek', 'Cold')),
       ]);
       hospital.add_room(room);
 
-      final newPatient = Patient('P002', 'Bob', 'Fever');
+      final newPatient = Patient('P002', 'Jimmy', 'Rash');
       expect(() => hospital.allocate_patient(newPatient), throwsA(isA<Exception>()));
     });
 
@@ -66,7 +69,7 @@ void main() {
       final room = Room('R101', '101', [bed]);
       hospital.add_room(room);
 
-      final patient = Patient('P001', 'Alice', 'Flu');
+      final patient = Patient('P001', 'Sans', 'Flu');
       hospital.allocate_patient(patient);
       hospital.unoccupied_bed('R101', 'B001');
 

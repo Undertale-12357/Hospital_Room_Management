@@ -1,5 +1,8 @@
 import 'dart:io';
 import '../domain/manage_room.dart';
+import '../domain/bed.dart';
+import '../domain/patient.dart';
+import '../domain/room.dart';
 
 class ConsoleUI {
   final ManageRoom manager;

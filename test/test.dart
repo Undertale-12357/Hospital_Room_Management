@@ -1,86 +1,114 @@
 import 'package:test/test.dart';
-import 'package:hospital_room_management_system/domain/bed.dart';
-import 'package:hospital_room_management_system/domain/patient.dart';
-import 'package:hospital_room_management_system/domain/room.dart';
-import 'package:hospital_room_management_system/domain/manage_room.dart';
-import 'package:hospital_room_management_system/data/data.dart';
+import 'package:mocktail/mocktail.dart';
+import '../lib/domain/entities/room.dart';
+import '../lib/domain/entities/bed.dart';
+import '../lib/domain/entities/patient.dart';
+import '../lib/domain/entities/enums.dart';
+import '../lib/domain/repositories/i_room_repository.dart';
+import '../lib/domain/usecases/add_room.dart';
+import '../lib/domain/usecases/allocate_patient.dart';
+import '../lib/domain/usecases/get_room_status.dart';
+import '../lib/domain/usecases/release_bed.dart';
 
-// Dummy Data class that doesn’t actually write/read files
-class DummyData extends Data {
-  DummyData() : super(filePath: 'dummy.json');
-
-  @override
-  void save(List<Room> rooms) {
-    // Do nothing (skip file saving)
-  }
-
-  @override
-  List<Room> load() {
-    return []; // No data to load
-  }
-}
+// Mock repository
+class MockRoomRepository extends Mock implements IRoomRepository {}
 
 void main() {
-  group('ManageRoom', () {
-    late ManageRoom hospital;
-    late DummyData dummyData;
+  late MockRoomRepository repository;
+  late AddRoom addRoom;
+  late AllocatePatient allocatePatient;
+  late GetRoomStatus getRoomStatus;
+  late ReleaseBed releaseBed;
 
-    setUp(() {
-      dummyData = DummyData();
-      hospital = ManageRoom(dummyData);
+  setUp(() {
+    repository = MockRoomRepository();
+    addRoom = AddRoom(repository: repository);
+    allocatePatient = AllocatePatient(repository: repository);
+    getRoomStatus = GetRoomStatus(repository: repository);
+    releaseBed = ReleaseBed(repository: repository);
+  });
+
+  group('AddRoom UseCase', () {
+    test('should call repository to add room', () {
+      final room = Room(room_id: 'R1', room_number: '101', number_of_beds: 2);
+
+      addRoom(room);
+
+      verify(() => repository.add_room(room)).called(1);
+    });
+  });
+
+  group('AllocatePatient UseCase', () {
+    test('should throw exception if no rooms', () {
+      when(() => repository.get_all_rooms()).thenReturn([]);
+
+      final patient = Patient(patient_id: 'P1', name: 'Alice');
+      expect(() => allocatePatient(patient), throwsA(isA<Exception>()));
     });
 
-    test('should add a new room successfully', () {
-      final room = Room('R101', '101', []);
-      hospital.add_room(room);
+    test('should assign patient to first available bed', () {
+      final bed1 = Bed(bed_number: 1);
+      final room = Room(room_id: 'R1', room_number: '101', number_of_beds: 1);
+      room.beds[0] = bed1;
 
-      expect(hospital.rooms.length, 1);
-      expect(hospital.rooms.first.id, 'R101');
+      when(() => repository.get_all_rooms()).thenReturn([room]);
+      when(() => repository.save_rooms()).thenReturn(null);
+
+      final patient = Patient(patient_id: 'P1', name: 'Alice');
+      allocatePatient(patient);
+
+      expect(bed1.status, bed_status.occupied);
+      expect(bed1.patient, patient);
+      verify(() => repository.save_rooms()).called(1);
     });
 
-    test('should not allocate patient if no rooms exist', () {
-      final patient = Patient('P001', 'Sans', 'Flu');
-      expect(() => hospital.allocate_patient(patient), throwsA(isA<Exception>()));
+    test('should throw exception if all beds occupied', () {
+      final bed1 = Bed(bed_number: 1, status: bed_status.occupied);
+      final room = Room(room_id: 'R1', room_number: '101', number_of_beds: 1);
+      room.beds[0] = bed1;
+
+      when(() => repository.get_all_rooms()).thenReturn([room]);
+
+      final patient = Patient(patient_id: 'P1', name: 'Alice');
+      expect(() => allocatePatient(patient), throwsA(isA<Exception>()));
+    });
+  });
+
+  group('GetRoomStatus UseCase', () {
+    test('should return rooms from repository', () {
+      final room = Room(room_id: 'R1', room_number: '101', number_of_beds: 1);
+      when(() => repository.get_all_rooms()).thenReturn([room]);
+
+      final result = getRoomStatus();
+
+      expect(result, [room]);
+    });
+  });
+
+  group('ReleaseBed UseCase', () {
+    test('should release bed successfully', () {
+      final bed1 = Bed(bed_number: 1, status: bed_status.occupied, patient: Patient(patient_id: 'P1', name: 'Alice'));
+      final room = Room(room_id: 'R1', room_number: '101', number_of_beds: 1);
+      room.beds[0] = bed1;
+
+      when(() => repository.get_all_rooms()).thenReturn([room]);
+      when(() => repository.save_rooms()).thenReturn(null);
+
+      releaseBed.call('R1', 1);
+
+      expect(bed1.status, bed_status.available);
+      expect(bed1.patient, null);
+      verify(() => repository.save_rooms()).called(1);
     });
 
-    test('should allocate a patient to a bed', () {
-      final room = Room('R101', '101', [Bed('B001')]);
-      hospital.add_room(room);
-      final patient = Patient('P001', 'Sans', 'Flu');
+    test('should throw exception if bed already available', () {
+      final bed1 = Bed(bed_number: 1);
+      final room = Room(room_id: 'R1', room_number: '101', number_of_beds: 1);
+      room.beds[0] = bed1;
 
-      hospital.allocate_patient(patient);
+      when(() => repository.get_all_rooms()).thenReturn([room]);
 
-      expect(hospital.rooms.first.beds.first.is_occupied, true);
-      expect(hospital.rooms.first.beds.first.patient?.name, 'Sans');
-    });
-
-    test('should not allocate patient if all beds are occupied', () {
-      final room = Room('R101', '101', [
-        Bed('B001', is_occupied: true, patient: Patient('P001', 'Mek', 'Cold')),
-      ]);
-      hospital.add_room(room);
-
-      final newPatient = Patient('P002', 'Jimmy', 'Rash');
-      expect(() => hospital.allocate_patient(newPatient), throwsA(isA<Exception>()));
-    });
-
-    test('should release a patient\'s bed successfully', () {
-      final bed = Bed('B001');
-      final room = Room('R101', '101', [bed]);
-      hospital.add_room(room);
-
-      final patient = Patient('P001', 'Sans', 'Flu');
-      hospital.allocate_patient(patient);
-      hospital.unoccupied_bed('R101', 'B001');
-
-      expect(bed.is_occupied, false);
-    });
-
-    test('should throw exception if releasing already available bed', () {
-      final room = Room('R101', '101', [Bed('B001')]);
-      hospital.add_room(room);
-
-      expect(() => hospital.unoccupied_bed('R101', 'B001'), throwsA(isA<Exception>()));
+      expect(() => releaseBed.call('R1', 1), throwsA(isA<Exception>()));
     });
   });
 }

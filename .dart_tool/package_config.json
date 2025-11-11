@@ -128,6 +128,12 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "mocktail",
+      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/mocktail-0.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "node_preamble",
       "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/node_preamble-2.0.2",
       "packageUri": "lib/",
@@ -290,7 +296,7 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "hospital_room_management_system",
+      "name": "hospital_management_system",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.0"

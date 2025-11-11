@@ -54,7 +54,7 @@ void main() {
       when(() => repository.get_all_rooms()).thenReturn([room]);
       when(() => repository.save_rooms()).thenReturn(null);
 
-      final patient = Patient(patient_id: 'P1', name: 'Alice');
+      final patient = Patient(patient_id: 'P1', name: 'sans');
       allocatePatient(patient);
 
       expect(bed1.status, bed_status.occupied);
@@ -69,7 +69,7 @@ void main() {
 
       when(() => repository.get_all_rooms()).thenReturn([room]);
 
-      final patient = Patient(patient_id: 'P1', name: 'Alice');
+      final patient = Patient(patient_id: 'P1', name: 'sans');
       expect(() => allocatePatient(patient), throwsA(isA<Exception>()));
     });
   });
@@ -87,7 +87,7 @@ void main() {
 
   group('ReleaseBed UseCase', () {
     test('should release bed successfully', () {
-      final bed1 = Bed(bed_number: 1, status: bed_status.occupied, patient: Patient(patient_id: 'P1', name: 'Alice'));
+      final bed1 = Bed(bed_number: 1, status: bed_status.occupied, patient: Patient(patient_id: 'P1', name: 'sans'));
       final room = Room(room_id: 'R1', room_number: '101', number_of_beds: 1);
       room.beds[0] = bed1;
 

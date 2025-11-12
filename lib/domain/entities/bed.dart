@@ -25,18 +25,4 @@ class Bed {
     patient = null;
     status = bed_status.available;
   }
-
-  Map<String, dynamic> to_json() => {
-        'bed_number': bed_number,
-        'status': status.name,
-        'patient': patient?.to_json(),
-      };
-
-  factory Bed.from_json(Map<String, dynamic> json) => Bed(
-        bed_number: json['bed_number'],
-        status: bed_status.values.firstWhere((e) => e.name == json['status']),
-        patient: json['patient'] != null
-            ? Patient.from_json(json['patient'])
-            : null,
-      );
 }

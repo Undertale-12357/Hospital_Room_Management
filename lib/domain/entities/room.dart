@@ -20,20 +20,4 @@ class Room {
     }
     throw Exception('No available beds in room $room_id');
   }
-
-  Map<String, dynamic> to_json() => {
-        'room_id': room_id,
-        'type': type.name,
-        'beds': beds.map((b) => b.to_json()).toList(),
-      };
-
-  factory Room.from_json(Map<String, dynamic> json) => Room(
-        room_id: json['room_id'],
-        room_number: json['room_number'],
-        number_of_beds: (json['beds'] as List).length,
-        type: room_type.values.firstWhere((e) => e.name == json['type']),
-      )..beds.setAll(
-          0,
-          (json['beds'] as List).map((b) => Bed.from_json(b)).toList(),
-        );
 }
